@@ -129,7 +129,10 @@ config_get() {
     _CONFIG_CACHE=$(_config_load)
   fi
   if command -v jq >/dev/null 2>&1; then
-    echo "$_CONFIG_CACHE" | jq -r "$filter" 2>/dev/null
+    # Strip CR: some Windows jq builds emit CRLF line endings, which would
+    # otherwise embed \r into every value and break downstream regex/compares
+    # (e.g. a type whitelist becomes `chore\r` and never matches `chore:`).
+    echo "$_CONFIG_CACHE" | jq -r "$filter" 2>/dev/null | tr -d '\r'
   else
     return 0
   fi
