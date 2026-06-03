@@ -78,7 +78,7 @@ _portfolio_root() {
       echo "$cur"
       return 0
     fi
-    cur=$(dirname "$cur")
+    _apwalk_prev="$cur"; cur=$(dirname "$cur"); [ "$cur" = "$_apwalk_prev" ] && break
   done
 
   # Not under an apexyard fork — fall back to git toplevel so callers

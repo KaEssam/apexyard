@@ -134,7 +134,7 @@ while [ -n "$r" ] && [ "$r" != "/" ]; do
     REGISTRY="$r/apexyard.projects.yaml"
     break
   fi
-  r=$(dirname "$r")
+  _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
 done
 
 if [ -z "$REGISTRY" ]; then

@@ -50,7 +50,7 @@ else
     if [ -f "$cur/onboarding.yaml" ] && [ -f "$cur/apexyard.projects.yaml" ]; then
       OPS_ROOT="$cur"; break
     fi
-    cur=$(dirname "$cur")
+    _apwalk_prev="$cur"; cur=$(dirname "$cur"); [ "$cur" = "$_apwalk_prev" ] && break
   done
 fi
 MARKER_HOME="${OPS_ROOT:-${REPO_ROOT:-.}}"

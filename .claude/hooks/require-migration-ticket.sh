@@ -98,7 +98,7 @@ if [ -n "$REPO_ROOT" ]; then
         OPS_ROOT="$r"
         break
       fi
-      r=$(dirname "$r")
+      _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
     done
   fi
 fi

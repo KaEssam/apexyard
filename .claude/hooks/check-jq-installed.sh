@@ -50,7 +50,7 @@ else
     if [ -f "$r/onboarding.yaml" ] && [ -f "$r/apexyard.projects.yaml" ]; then
       ops_root="$r"; break
     fi
-    r=$(dirname "$r")
+    _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
   done
 fi
 

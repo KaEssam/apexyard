@@ -132,7 +132,7 @@ spike_commit_exempt() {
         marker_home="$r"
         break
       fi
-      r=$(dirname "$r")
+      _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
     done
   fi
 
