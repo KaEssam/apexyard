@@ -44,3 +44,9 @@ workspace/*/
 # `git status` shows them as untracked symlinks — leave them alone.
 # If you absolutely want to suppress the untracked-symlink line, add the
 # specific name to .git/info/exclude on each clone.
+
+# Split-portfolio v2 — private data lives in the sibling repo, never here.
+/onboarding.yaml
+/apexyard.projects.yaml
+/projects/
+/workspace/
