@@ -27,7 +27,7 @@ while [ -n "$r" ] && [ "$r" != "/" ]; do
     mcp_configured=true
     break
   fi
-  _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
+  r=$(dirname "$r")
 done
 
 $mcp_configured || exit 0

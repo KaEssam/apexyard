@@ -76,7 +76,7 @@ else
   while [ -n "$cur" ] && [ "$cur" != "/" ]; do
     if [ -f "$cur/.apexyard-fork" ]; then ROOT="$cur"; break; fi
     if [ -f "$cur/onboarding.yaml" ] && [ -f "$cur/apexyard.projects.yaml" ]; then ROOT="$cur"; break; fi
-    _apwalk_prev="$cur"; cur=$(dirname "$cur"); [ "$cur" = "$_apwalk_prev" ] && break
+    cur=$(dirname "$cur")
   done
 fi
 

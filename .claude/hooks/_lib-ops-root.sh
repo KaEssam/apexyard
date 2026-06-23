@@ -100,7 +100,7 @@ resolve_ops_root_walk() {
       printf '%s' "$r"
       return 0
     fi
-    _apwalk_prev="$r"; r=$(dirname "$r"); [ "$r" = "$_apwalk_prev" ] && break
+    r=$(dirname "$r")
   done
   return 0
 }

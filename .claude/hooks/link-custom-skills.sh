@@ -67,7 +67,7 @@ else
     if [ -f "$cur/onboarding.yaml" ] && [ -f "$cur/apexyard.projects.yaml" ]; then
       ops_root="$cur"; break
     fi
-    _apwalk_prev="$cur"; cur=$(dirname "$cur"); [ "$cur" = "$_apwalk_prev" ] && break
+    cur=$(dirname "$cur")
   done
 fi
 

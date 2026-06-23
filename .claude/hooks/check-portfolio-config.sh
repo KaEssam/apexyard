@@ -47,7 +47,7 @@ else
       ROOT="$cur"
       break
     fi
-    _apwalk_prev="$cur"; cur=$(dirname "$cur"); [ "$cur" = "$_apwalk_prev" ] && break
+    cur=$(dirname "$cur")
   done
 fi
 
