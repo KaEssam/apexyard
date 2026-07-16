@@ -49,7 +49,7 @@ DEFAULT_BRANCH=${DEFAULT_BRANCH:-main}
 # Fetch cache: skip the network call if we fetched within the last 10 minutes.
 CACHE_DIR="${REPO_ROOT}/.claude/session"
 CACHE_FILE="${CACHE_DIR}/last-upstream-fetch"
-TTL_SECONDS=600
+TTL_SECONDS=86400
 NOW=$(date +%s)
 
 SHOULD_FETCH=1

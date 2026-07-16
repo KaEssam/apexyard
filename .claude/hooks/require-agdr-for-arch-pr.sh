@@ -42,6 +42,16 @@ if ! echo "$COMMAND" | grep -qE '\bgh\s+pr\s+create\b'; then
   exit 0
 fi
 
+# Evaluate the repo the command actually runs in (its `cd <path>` target), not
+# the harness cwd — in split-portfolio setups the harness runs hooks from the
+# ops fork, so REPO_ROOT, the origin used by the cross-repo guard, and the arch
+# diff would otherwise reflect the framework fork instead of the PR's repo.
+# ($0 is absolute, so hook-dir resolution stays correct after the cd.)
+CD_TARGET=$(echo "$COMMAND" | grep -oE "(^|[;&|[:space:]])cd[[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:];&|]+)" | tail -n 1 | sed -E "s/.*cd[[:space:]]+//; s/^[\"']//; s/[\"']\$//")
+if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
+  cd "$CD_TARGET" 2>/dev/null || true
+fi
+
 # ---------------------------------------------------------------------------
 # 1. Extract --title, --body, --body-file, -F <path> from the command.
 #    Same parser shape as block-private-refs-in-public-repos.sh — lifted here

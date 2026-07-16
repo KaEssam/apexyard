@@ -16,6 +16,15 @@ if [ -z "$COMMAND" ]; then
   exit 0
 fi
 
+# Evaluate the repo the command actually runs in (its `cd <path>` target), not
+# the harness cwd — in split-portfolio setups the harness runs hooks from the
+# ops fork, so ticket-existence and origin checks would otherwise target the
+# wrong repo. ($0 is absolute, so hook-dir resolution below is unaffected.)
+CD_TARGET=$(echo "$COMMAND" | grep -oE "(^|[;&|[:space:]])cd[[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:];&|]+)" | tail -n 1 | sed -E "s/.*cd[[:space:]]+//; s/^[\"']//; s/[\"']\$//")
+if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
+  cd "$CD_TARGET" 2>/dev/null || true
+fi
+
 # Parse --repo / -R from the gh command for cross-repo PR creation.
 # Handles: --repo VALUE, --repo=VALUE, -R VALUE, -R=VALUE.
 # Source _lib-pr-repo.sh when available (DRY — it owns the canonical parser).
@@ -334,7 +343,7 @@ fi
 # the check with a visible stderr WARN. Default marker is
 # `<!-- pr-sections: skip -->`.
 BODY_CONTENT=""
-BODY_FILE=$(echo "$COMMAND" | sed -nE 's/.*--body-file[[:space:]]+([^[:space:]]+).*/\1/p' | head -1)
+BODY_FILE=$(echo "$COMMAND" | grep -oE -- "--body-file[[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:];&|]+)" | head -1 | sed -E "s/^--body-file[[:space:]]+//; s/^[\"']//; s/[\"']\$//")
 if [ -n "$BODY_FILE" ] && [ -f "$BODY_FILE" ]; then
   BODY_CONTENT=$(cat "$BODY_FILE")
 fi

@@ -39,6 +39,15 @@ if ! echo "$COMMAND" | grep -qE '\bgit\s+push\b'; then
   exit 0
 fi
 
+# Evaluate the repo the command actually runs in (its `cd <path>` target), not
+# the harness cwd — in split-portfolio / worktree setups the harness runs hooks
+# from the ops fork, so the gate would otherwise read the framework's HEAD +
+# pre_push config instead of the project clone being pushed.
+CD_TARGET=$(echo "$COMMAND" | grep -oE "(^|[;&|[:space:]])cd[[:space:]]+(\"[^\"]*\"|'[^']*'|[^[:space:];&|]+)" | tail -n 1 | sed -E "s/.*cd[[:space:]]+//; s/^[\"']//; s/[\"']\$//")
+if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
+  cd "$CD_TARGET" 2>/dev/null || true
+fi
+
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 if [ -z "$REPO_ROOT" ]; then
   exit 0
