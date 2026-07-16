@@ -2,9 +2,6 @@
 # onboarding flag. Per-machine, per-clone. Never committed.
 .claude/session/
 
-# Local MCP server wiring — per-machine tool choice, not a framework file.
-.mcp.json
-
 # Generated OpenAPI specs. A managed project's spec must never land in this
 # PUBLIC fork — it would publish that project's entire API surface.
 openapi.json
