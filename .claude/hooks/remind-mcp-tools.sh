@@ -22,14 +22,12 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 # the ops root (portfolio walkers may land us in a different root)
 mcp_configured=false
 r="$REPO_ROOT"
-prev=""
-while [ -n "$r" ] && [ "$r" != "/" ] && [ "$r" != "$prev" ]; do
+while [ -n "$r" ] && [ "$r" != "/" ]; do
   if [ -f "$r/.mcp.json" ]; then
     mcp_configured=true
     break
   fi
-  prev="$r"
-  r=$(dirname "$r")
+  parent=$(dirname "$r"); [ "$parent" = "$r" ] && break; r="$parent"
 done
 
 $mcp_configured || exit 0
