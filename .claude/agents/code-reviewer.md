@@ -5,7 +5,7 @@ persona_name: Rex
 description: Expert code review specialist. Reviews PRs for quality, security, and standards compliance. Use proactively after code changes or when a PR needs review.
 tools: Read, Grep, Glob, Bash, mcp__apexyard-search__search_code, mcp__apexyard-search__search_docs
 disallowedTools: Write, Edit
-model: inherit
+model: opus
 ---
 
 # Code Reviewer Agent
@@ -212,7 +212,8 @@ The path conventions below apply to **each** of the two source roots. Within a s
 |---|---|
 | `architecture/*.md` | Always — every PR |
 | `general/*.md` | Always — every PR |
-| `language/<lang>/*.md` | When the PR diff includes files matching `<lang>`'s extensions: `typescript/` → `**/*.{ts,tsx}`, `csharp/` → `**/*.cs`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`. Other directories under `language/` follow the same `<lang>/` → matching-extension convention. |
+| `language/<lang>/*.md` | When the PR diff includes files matching `<lang>`'s extensions: `typescript/` → `**/*.{ts,tsx}`, `csharp/` → `**/*.{cs,sql}`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`. Other directories under `language/` follow the same `<lang>/` → matching-extension convention. |
+| `language/dotnet/*.md` | Shares the `csharp/` bucket's `**/*.{cs,sql}` trigger — these handbooks target .NET Clean-Architecture folder conventions (`**/Application/**`, `**/Domain/**`) rather than a distinct file extension, so there is no separate `.dotnet` extension to gate on. |
 | `language/angular/*.md` | **Repo-gated exception** to the extension-only rule: loads when the diff touches `**/*.{ts,html}` **and** the repo is an Angular project (an `angular.json` outside `node_modules`, or `@angular/core` in a `package.json`) — so Angular rules never fire on React/Next/Nest TypeScript. See AgDR-0093. |
 | `domain/<area>/*.md` | **Parse the YAML frontmatter** (a `---`-delimited block at the top of the file). If a `paths:` field is present and non-empty, load this handbook only when the PR diff matches at least one glob in the list. If `paths:` is absent or empty, **always load** (foundational domain rule with no path boundary). See § "Domain handbook frontmatter — `paths:` field" below for the parse + match shape and [`handbooks/domain/README.md`](../../handbooks/domain/README.md) for the authoring convention. |
 | `<other>/*.md` | Default to always-load if you don't recognise the directory; flag in your review that the directory convention is undocumented. |
@@ -242,9 +243,11 @@ if echo "$DIFF_FILES" | grep -qE '\.(ts|tsx)$'; then
   find handbooks/language/typescript -name '*.md' 2>/dev/null
   [ -n "$PRIV" ] && find "$PRIV/language/typescript" -name '*.md' 2>/dev/null
 fi
-if echo "$DIFF_FILES" | grep -qE '\.cs$'; then
+if echo "$DIFF_FILES" | grep -qE '\.(cs|sql)$'; then
   find handbooks/language/csharp -name '*.md' 2>/dev/null
+  find handbooks/language/dotnet -name '*.md' 2>/dev/null
   [ -n "$PRIV" ] && find "$PRIV/language/csharp" -name '*.md' 2>/dev/null
+  [ -n "$PRIV" ] && find "$PRIV/language/dotnet" -name '*.md' 2>/dev/null
 fi
 # Angular is not a bare file extension — .ts/.html also belong to React/Next/Nest.
 # Gate the angular/ bucket on the repo actually being an Angular project so it

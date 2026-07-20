@@ -16,11 +16,12 @@ Rex finds handbooks by **path convention** — there is no YAML frontmatter, no 
 |---|---|
 | `handbooks/architecture/*.md` | **Always** — architecture standards apply to every PR |
 | `handbooks/general/*.md` | **Always** — cross-cutting rules (commit messages, comment density, naming) apply to every PR |
-| `handbooks/language/<lang>/*.md` | **On diff match** — only when the PR touches files of that language. `<lang>` matches by extension: `typescript/` → `**/*.{ts,tsx}`, `csharp/` → `**/*.cs`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`, etc. |
+| `handbooks/language/<lang>/*.md` | **On diff match** — only when the PR touches files of that language. `<lang>` matches by extension: `typescript/` → `**/*.{ts,tsx}`, `csharp/` → `**/*.{cs,sql}`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`, etc. |
 | `handbooks/language/angular/*.md` | **On diff match, repo-gated** — loads when the diff touches `**/*.{ts,html}` AND the repo is an Angular project (`angular.json` / `@angular/core`), so Angular rules never fire on other TS frameworks. The one exception to extension-only matching. See AgDR-0093. |
+| `handbooks/language/dotnet/*.md` | **On diff match, shares `csharp/`'s trigger** — these handbooks target .NET Clean-Architecture folder conventions (`**/Application/**`, `**/Domain/**`) rather than a distinct file extension, so they load on the same `**/*.{cs,sql}` match as `csharp/`. |
 | `handbooks/domain/<area>/*.md` | **On diff match via opt-in `paths:` frontmatter** — domain-specific review knowledge (GitHub EMU semantics, Stripe webhook validation, SSO SAML claim shapes, etc.). Each handbook may declare a `paths:` YAML frontmatter list of globs; Rex loads the handbook only when the PR diff matches at least one glob. Handbooks without a `paths:` field load always (foundational domain rules with no path boundary). See [`handbooks/domain/README.md`](domain/README.md) and AgDR-0037. |
 
-If you need a fifth bucket beyond these four, add the directory and update Rex's discovery logic in `.claude/agents/code-reviewer.md`. The path convention is open — Rex falls back to "always-load" for any directory it doesn't have specific rules for.
+If you need another bucket beyond these, add the directory and update Rex's discovery logic in `.claude/agents/code-reviewer.md`. The path convention is open — Rex falls back to "always-load" for any directory it doesn't have specific rules for.
 
 ### Semantic supplement (apexyard#449)
 
