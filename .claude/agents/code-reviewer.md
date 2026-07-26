@@ -5,7 +5,7 @@ persona_name: Rex
 description: Expert code review specialist. Reviews PRs for quality, security, and standards compliance. Use proactively after code changes or when a PR needs review.
 tools: Read, Grep, Glob, Bash, mcp__apexyard-search__search_code, mcp__apexyard-search__search_docs
 disallowedTools: Write, Edit
-model: opus
+model: inherit
 ---
 
 # Code Reviewer Agent
@@ -212,7 +212,8 @@ The path conventions below apply to **each** of the two source roots. Within a s
 |---|---|
 | `architecture/*.md` | Always — every PR |
 | `general/*.md` | Always — every PR |
-| `language/<lang>/*.md` | When the PR diff includes files matching `<lang>`'s extensions: `typescript/` → `**/*.{ts,tsx}`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`. Other directories under `language/` follow the same `<lang>/` → matching-extension convention. |
+| `language/<lang>/*.md` | When the PR diff includes files matching `<lang>`'s extensions: `typescript/` → `**/*.{ts,tsx}`, `csharp/` → `**/*.cs`, `python/` → `**/*.py`, `go/` → `**/*.go`, `rust/` → `**/*.rs`. Other directories under `language/` follow the same `<lang>/` → matching-extension convention. |
+| `language/angular/*.md` | **Repo-gated exception** to the extension-only rule: loads when the diff touches `**/*.{ts,html}` **and** the repo is an Angular project (an `angular.json` outside `node_modules`, or `@angular/core` in a `package.json`) — so Angular rules never fire on React/Next/Nest TypeScript. See AgDR-0093. |
 | `domain/<area>/*.md` | **Parse the YAML frontmatter** (a `---`-delimited block at the top of the file). If a `paths:` field is present and non-empty, load this handbook only when the PR diff matches at least one glob in the list. If `paths:` is absent or empty, **always load** (foundational domain rule with no path boundary). See § "Domain handbook frontmatter — `paths:` field" below for the parse + match shape and [`handbooks/domain/README.md`](../../handbooks/domain/README.md) for the authoring convention. |
 | `<other>/*.md` | Default to always-load if you don't recognise the directory; flag in your review that the directory convention is undocumented. |
 
@@ -235,13 +236,26 @@ find handbooks/architecture handbooks/general -name '*.md' 2>/dev/null
 
 # Diff-matched language buckets — public + private.
 DIFF_FILES=$(gh pr diff <number> --name-only)
-echo "$DIFF_FILES" | (
-  if grep -qE '\.(ts|tsx)$'; then
-    find handbooks/language/typescript -name '*.md' 2>/dev/null
-    [ -n "$PRIV" ] && find "$PRIV/language/typescript" -name '*.md' 2>/dev/null
-  fi
-  # ... etc per language
-)
+# Each check re-reads $DIFF_FILES independently — piping into one subshell would
+# drain stdin after the first grep, so a second bucket would never match.
+if echo "$DIFF_FILES" | grep -qE '\.(ts|tsx)$'; then
+  find handbooks/language/typescript -name '*.md' 2>/dev/null
+  [ -n "$PRIV" ] && find "$PRIV/language/typescript" -name '*.md' 2>/dev/null
+fi
+if echo "$DIFF_FILES" | grep -qE '\.cs$'; then
+  find handbooks/language/csharp -name '*.md' 2>/dev/null
+  [ -n "$PRIV" ] && find "$PRIV/language/csharp" -name '*.md' 2>/dev/null
+fi
+# Angular is not a bare file extension — .ts/.html also belong to React/Next/Nest.
+# Gate the angular/ bucket on the repo actually being an Angular project so it
+# never fires on non-Angular TypeScript. See AgDR-0093.
+if echo "$DIFF_FILES" | grep -qE '\.(ts|html)$' && \
+   { find . -maxdepth 4 -name angular.json -not -path '*/node_modules/*' 2>/dev/null | grep -q . \
+     || grep -rqsE '"@angular/core"' package.json */package.json 2>/dev/null; }; then
+  find handbooks/language/angular -name '*.md' 2>/dev/null
+  [ -n "$PRIV" ] && find "$PRIV/language/angular" -name '*.md' 2>/dev/null
+fi
+# ... more languages follow the same `echo "$DIFF_FILES" | grep` pattern
 
 # Domain buckets — public + private. Frontmatter-driven (see next section).
 # Collect all candidate handbooks first, then make ONE batched matcher call
