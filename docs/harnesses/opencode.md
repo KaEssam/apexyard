@@ -26,16 +26,31 @@ A credentialed opencode session, run with `--auto`, issued `git add -A` during a
 
 ## How to install
 
+There are **two** installs — both one-time, both idempotent. Run them together for full opencode === Claude Code parity (gates + skills):
+
 ```bash
-bash bin/install-opencode-adapter.sh
+bash bin/install-opencode-adapter.sh    # gates:  merge block, ticket-first, secrets, red-CI, AgDR
+bash bin/install-opencode-commands.sh    # skills: /feature, /handover, /projects, /inbox, … 65 shims
 ```
 
-That writes the adapter into `.opencode/plugins/apexyard/` — a **subdirectory** shape, not a flat file copy. Both details are load-bearing and were confirmed live against opencode 1.17.16 (#844/#845):
+### Gates — `install-opencode-adapter.sh`
+
+Writes the adapter into `.opencode/plugins/apexyard/` — a **subdirectory** shape, not a flat file copy. Both details are load-bearing and were confirmed live against opencode 1.17.16 (#844/#845):
 
 - The discovery directory is **plural** — `.opencode/plugins/` — the singular `.opencode/plugin/` silently loads nothing.
 - Every file must sit inside the one subdirectory behind a re-export `index.ts` shim; a flat `cp` of the adapter + its helper modules crashes opencode at startup, because opencode treats every exported function of a discovered file as a candidate plugin factory.
 
-Full reference: [`docs/opencode-adapter.md`](../opencode-adapter.md).
+Full reference: [`docs/opencode-adapter.md`](../opencode-adapter.md). AgDR: [AgDR-0092](../agdr/AgDR-0092-opencode-gate-adapter.md).
+
+## Skill parity — `install-opencode-commands.sh`
+
+The gate adapter closes the **enforcement** gap; this script closes the **invocation** gap. Under Claude Code, each `.claude/skills/<name>/SKILL.md` becomes a typed slash command. Under opencode, the skill menu was missing — adopters had to `Read` each `SKILL.md` manually. AgDR-0095 fixed that.
+
+`install-opencode-commands.sh` scans `.claude/skills/*/SKILL.md` and writes one `.opencode/commands/<name>.md` shim per skill. Each shim is a thin re-export: frontmatter `description` sourced from the SKILL.md's YAML `description:` (with the first `#` heading as fallback), body uses opencode's `@<path>` file-reference to embed the SKILL.md content and `$ARGUMENTS` to forward parameters. The SKILL.md stays the single source of truth — a skill update needs no shim edit, only a re-run (idempotent, overwrites).
+
+After an `/update` pull that changes skills, re-run the script to refresh the shims — same operational discipline the gate adapter already requires. `.opencode/` is gitignored (`.gitignore` line 72), so neither install commits output; the framework ships the **generators**, not the generated files.
+
+AgDR: [AgDR-0095](../agdr/AgDR-0095-opencode-skill-parity-bridge.md). Follow-up named there: per-skill `subtask`/`agent` tuning for heavy audit skills is left unset in v1.
 
 ## Preconditions
 
