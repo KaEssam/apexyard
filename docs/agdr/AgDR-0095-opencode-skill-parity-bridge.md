@@ -44,3 +44,7 @@ Three supporting decisions, made while building the generator:
 - `bin/install-opencode-commands.sh` — the generator (scans `.claude/skills/*/SKILL.md`, writes `.opencode/commands/<name>.md` per skill, idempotent, CRLF-safe frontmatter parse)
 - `docs/harnesses/opencode.md` — new "Skill parity" section documenting the install alongside the gate section
 - `.opencode/commands/*.md` — generated output (gitignored, not committed)
+
+## Addendum (2026-07-27)
+
+The generated output was in fact committed — `.opencode/commands/*.md` and `.opencode/plugins/apexyard/*.ts` were sitting untracked in the ops fork's working tree (never pushed after generation) and were committed in KaEssam/apexyard#6 so the shims travel with the repo to other machines instead of requiring a local regeneration step. The line above reflected the original design intent, not what shipped; this addendum corrects the record per the append-only AgDR convention.
