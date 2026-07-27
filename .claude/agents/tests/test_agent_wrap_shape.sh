@@ -78,19 +78,21 @@ ROLE_AGENTS=(
   "data-engineer:sonnet:Anwar:data"
 )
 
-# Utility agents — no canonical role file under roles/<dept>/. The model
-# baseline was set by AgDR-0050 § Axis 2 (Wave 2 PR 4 of #347), but
-# commit b95086c ("align reviewer agents to framework-default model:
-# inherit") deliberately reverted code-reviewer and security-reviewer
-# back to `model: inherit` — the routing-drift guard was re-flagging the
-# opus pin every session, and inherit is this framework's actual default
-# (the SessionStart routing sync re-applies any local override from
-# agent-routing.yaml). dependency-auditor/pr-manager/ticket-manager still
-# pin an explicit model and still carry the escape-hatch comment.
+# Utility agents — no canonical role file under roles/<dept>/, but the model
+# baseline is set by AgDR-0050 § Axis 2 and locked in by this PR (Wave 2 PR 4
+# of #347). Each entry carries a `# routing-config:override` comment in its
+# YAML frontmatter so block-agent-routing-drift.sh accepts the intentional
+# inherit→<model> framework-default change. security-reviewer.md is included
+# here because PR 3's Hatim→Hakim consolidation already promoted it to opus
+# with the same escape-hatch shape. commit b95086c briefly reverted
+# code-reviewer/security-reviewer to `model: inherit`; AgDR-0094 restores the
+# opus pin (frontier-model floor for gate-critical reviewers — see
+# AgDR-0087/AgDR-0089), so `inherit` here is the invariant this test guards
+# against regressing to, not an accepted value.
 # Format: "<slug>:<expected_model>:<expected_persona_name>"
 UTILITY_AGENTS=(
-  "code-reviewer:inherit:Rex"
-  "security-reviewer:inherit:Hakim"
+  "code-reviewer:opus:Rex"
+  "security-reviewer:opus:Hakim"
   "dependency-auditor:sonnet:Munir"
   "pr-manager:sonnet:Tariq"
   "ticket-manager:sonnet:Idris"
@@ -212,16 +214,17 @@ for entry in "${ROLE_AGENTS[@]}"; do
 done
 
 # -----------------------------------------------------------------------------
-# Invariant 4b — utility agents: model + persona (+ escape-hatch comment for
-# agents that pin an explicit, non-default model). Per commit b95086c, `model:
-# inherit` is this framework's actual default for utility agents — code-reviewer
-# and security-reviewer were deliberately reverted to it, so `inherit` is a
-# valid expected_model here, not a regression. Agents that DO pin an explicit
-# model (dependency-auditor, pr-manager, ticket-manager) still need the
-# `# routing-config:override` comment so the drift guard accepts the pin.
+# Invariant 4b — utility agents: model + persona + escape-hatch comment.
+# Per AgDR-0050 § Axis 2 and AgDR-0094, the 5 utility agents have explicit
+# model: values (not `inherit`) and carry a `# routing-config:override`
+# comment in YAML frontmatter so the drift guard accepts the intentional
+# framework-default change. AgDR-0094 specifically restores this invariant
+# for code-reviewer/security-reviewer after commit b95086c briefly reverted
+# them to `model: inherit` — a frontier-model floor regression per
+# AgDR-0087/AgDR-0089.
 # -----------------------------------------------------------------------------
 echo
-echo "== Utility-agent model + escape-hatch comment"
+echo "== Utility-agent model + escape-hatch comment (AgDR-0050 § Axis 2 / AgDR-0094)"
 for entry in "${UTILITY_AGENTS[@]}"; do
   IFS=':' read -r slug expected_model expected_persona <<<"$entry"
   agent_file="$AGENTS_DIR/${slug}.md"
@@ -233,8 +236,8 @@ for entry in "${UTILITY_AGENTS[@]}"; do
   fi
 
   actual_model=$(get_frontmatter_value "$agent_file" "model")
-  if [ "$expected_model" != "inherit" ] && { [ "$actual_model" = "inherit" ] || [ -z "$actual_model" ]; }; then
-    red "  FAIL: $slug — model=$actual_model (must be an explicit opus|sonnet|haiku per the matrix; inherit is a regression)"
+  if [ "$actual_model" = "inherit" ] || [ -z "$actual_model" ]; then
+    red "  FAIL: $slug — model=$actual_model (must be an explicit opus|sonnet|haiku per Axis 2; inherit is a regression)"
     FAIL=$((FAIL + 1))
     continue
   fi
@@ -251,22 +254,21 @@ for entry in "${UTILITY_AGENTS[@]}"; do
     continue
   fi
 
-  # Escape-hatch comment only required when the agent pins an explicit,
-  # non-default model — `inherit` IS the default, nothing to escape-hatch.
-  if [ "$expected_model" != "inherit" ]; then
-    # Uses POSIX char classes — \S isn't portable across awk implementations.
-    if ! awk '
-      /^---[[:space:]]*$/ { fm_count++; if (fm_count == 2) exit }
-      fm_count == 1 && /^[[:space:]]*#[[:space:]]*routing-config:override[[:space:]]+[^[:space:]]/ { found = 1 }
-      END { exit !found }
-    ' "$agent_file"; then
-      red "  FAIL: $slug — missing '# routing-config:override <reason>' comment in YAML frontmatter (drift guard will block any commit)"
-      FAIL=$((FAIL + 1))
-      continue
-    fi
+  # Escape-hatch comment in the YAML frontmatter (between the two `---`
+  # markers, `#`-prefixed). The drift guard requires it for any agent file
+  # whose model: differs from the dev-baseline `inherit`. Uses POSIX char
+  # classes — \S isn't portable across awk implementations.
+  if ! awk '
+    /^---[[:space:]]*$/ { fm_count++; if (fm_count == 2) exit }
+    fm_count == 1 && /^[[:space:]]*#[[:space:]]*routing-config:override[[:space:]]+[^[:space:]]/ { found = 1 }
+    END { exit !found }
+  ' "$agent_file"; then
+    red "  FAIL: $slug — missing '# routing-config:override <reason>' comment in YAML frontmatter (drift guard will block any commit)"
+    FAIL=$((FAIL + 1))
+    continue
   fi
 
-  green "  PASS: $slug (utility, model=$actual_model, persona=$actual_persona)"
+  green "  PASS: $slug (utility, model=$actual_model, persona=$actual_persona, escape-hatch present)"
 done
 
 # -----------------------------------------------------------------------------

@@ -1,10 +1,11 @@
 ---
+# routing-config:override AgDR-0094 restores the frontier-model pin on Tariq (Solution Architect) after b95086c briefly reverted it to inherit — a frontier-floor regression per AgDR-0087/AgDR-0089.
 name: solution-architect
 persona_name: Tariq
 description: Solution Architect — independent design reviewer. Reviews technical designs, migration AgDRs, and feature specs BEFORE the Build phase for architectural soundness (NFRs, patterns, tech debt, decisions, risk, trade-offs, traceability). The non-code analog of the Code Reviewer (Rex). Auto-activates on PRs that touch design artifacts; explicit invocation via /design-review. Canonical role at @roles/architecture/solution-architect.md.
 tools: Read, Grep, Glob, Bash, mcp__apexyard-search__search_docs, mcp__apexyard-search__search_code, WebSearch, WebFetch
 disallowedTools: Write, Edit
-model: inherit
+model: opus
 ---
 
 # Tariq — Solution Architect
